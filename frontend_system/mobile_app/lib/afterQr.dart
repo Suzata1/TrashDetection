@@ -1,26 +1,15 @@
-// import 'package:flutter/material.dart';
-
-// class QrAfterPage extends StatelessWidget {
-//   const QrAfterPage({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.grey[200],
-//       appBar: AppBar(
-//         title: const Text('API Response'),
-      
-//       ),
-//       body: Center(
-//         child: Text('This is the reward page'),
-//       ),
-//     );
-//   }
-// }
 import 'package:flutter/material.dart';
 import 'dashboard.dart';
+
 class QrAfterPage extends StatefulWidget {
-  const QrAfterPage({super.key});
+  final String wasteType;
+  final double confidence;
+
+  const QrAfterPage({
+    super.key,
+    required this.wasteType,
+    required this.confidence,
+  });
 
   @override
   State<QrAfterPage> createState() => _QrAfterPageState();
@@ -44,7 +33,6 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
     _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
-    // Start animations after a tiny delay
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) {
         setState(() => _isVisible = true);
@@ -59,43 +47,81 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
     super.dispose();
   }
 
+  String _getMaterialName(String wasteType) {
+    switch (wasteType.toLowerCase()) {
+      case 'cardboard':
+        return 'Cardboard';
+      case 'glass':
+        return 'Glass';
+      case 'metal':
+        return 'Metal';
+      case 'paper':
+        return 'Paper';
+      case 'plastic':
+        return 'Plastic';
+      case 'trash':
+        return 'General Waste';
+      default:
+        return wasteType;
+    }
+  }
+
+  IconData _getMaterialIcon(String wasteType) {
+    switch (wasteType.toLowerCase()) {
+      case 'cardboard':
+        return Icons.inventory_2;
+      case 'glass':
+        return Icons.local_drink;
+      case 'metal':
+        return Icons.hardware;
+      case 'paper':
+        return Icons.description;
+      case 'plastic':
+        return Icons.water_drop;
+      case 'trash':
+        return Icons.delete;
+      default:
+        return Icons.eco;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final confidencePercent = (widget.confidence * 100).toStringAsFixed(1);
+
     return Scaffold(
       backgroundColor: Colors.white,
-     appBar: AppBar(
-  leading: IconButton(
-    icon: const Icon(Icons.arrow_back, color: Colors.green),
-    onPressed: () {
-      Navigator.pop(context);
-    },
-  ),
-  title: const Text(
-    'API Response',
-    style: TextStyle(color: Colors.green),
-  ),
-  backgroundColor: Colors.white,
-  elevation: 0,
-),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.green),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: const Text(
+          'Classification Result',
+          style: TextStyle(color: Colors.green),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: Column(
         children: [
           const SizedBox(height: 40),
-          
-          // 1. Animated Checkmark
+
           ScaleTransition(
             scale: _scaleAnimation,
             child: const Icon(Icons.check_circle_outline, color: Colors.green, size: 80),
           ),
-          
+
           const SizedBox(height: 20),
           const Text(
-            'Recycle Item saved successfully',
+            'Waste Identified!',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 40),
 
-          // 2. Animated Info Card
           SlideTransition(
             position: _slideAnimation,
             child: AnimatedOpacity(
@@ -114,21 +140,62 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
                   ),
                   child: Column(
                     children: [
-                      // Simple Pulse for the Medal
                       TweenAnimationBuilder(
                         tween: Tween<double>(begin: 0.8, end: 1.0),
                         duration: const Duration(milliseconds: 800),
                         builder: (context, double val, child) => Transform.scale(scale: val, child: child),
-                        child: const Icon(Icons.emoji_events, color: Colors.orange, size: 100),
+                        child: Icon(
+                          _getMaterialIcon(widget.wasteType),
+                          color: Colors.green,
+                          size: 100,
+                        ),
                       ),
                       const SizedBox(height: 20),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text("Material Name: bottles", style: TextStyle(color: Colors.black54)),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Material: ",
+                            style: TextStyle(color: Colors.black54, fontSize: 16),
+                          ),
+                          Text(
+                            _getMaterialName(widget.wasteType),
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 8),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Confidence: ",
+                            style: TextStyle(color: Colors.black54, fontSize: 14),
+                          ),
+                          Text(
+                            "$confidencePercent%",
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+                      const Divider(),
+                      const SizedBox(height: 8),
+
                       const Text(
-                        "Contribution: You contributed to reduce 100-200g of CO2",
+                        "Contribution: You helped reduce 100-200g of CO2",
                         style: TextStyle(color: Colors.black54),
                       ),
                     ],
@@ -137,37 +204,36 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
               ),
             ),
           ),
-               const SizedBox(height: 20),
-        
+          const SizedBox(height: 20),
 
-          // 3. Text Button
-           TextButton(
-                 style: TextButton.styleFrom(
-                 backgroundColor: Colors.green,
-                   minimumSize: const Size(140, 50),
-                        ),
-                  onPressed: () {
-                  Navigator.push(
-                    context,
-                        MaterialPageRoute(builder: (context) => DashboardPage()),
-                        );
-                          },
-                       child: const Text(
-                       "Go to Dashboard",
-                        style: TextStyle(color: Colors.white),
-                   ),
-                    ),
-                const SizedBox(height: 94),
-          // 4. Animated Bottom Bar
+          TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.green,
+              minimumSize: const Size(140, 50),
+            ),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const DashboardPage()),
+                (route) => false,
+              );
+            },
+            child: const Text(
+              "Done",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          const SizedBox(height: 94),
+
           AnimatedContainer(
             duration: const Duration(milliseconds: 800),
             height: _isVisible ? 60 : 0,
             width: double.infinity,
             color: Colors.green.shade700,
             alignment: Alignment.center,
-            child: const Text(
-              "Item recycled successfully",
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            child: Text(
+              "${_getMaterialName(widget.wasteType)} recycled successfully",
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ],
