@@ -12,3 +12,5 @@ const cloudinaryConfig = async () => {
     console.log(err.message);
   }
 };
+
+export default cloudinaryConfig;

@@ -14,7 +14,7 @@ const authentication = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    const decodeToken = Jwt.verify(token, process.env.JWT_SECRETKEY);
+    const decodeToken = Jwt.verify(token, process.env.JWT_SECRET);
 
     req.user = decodeToken;
 
@@ -28,4 +28,4 @@ const authentication = async (req, res, next) => {
   }
 };
 
-export default authorization;
+export default authentication;

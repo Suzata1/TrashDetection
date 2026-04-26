@@ -59,3 +59,33 @@ export const deleteUser = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+// ================= REDEEM CREDITS =================
+export const redeemCredits = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ message: "Invalid amount" });
+    }
+
+    const user = await userModel.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.credits < amount) {
+      return res.status(400).json({ message: "Insufficient credits" });
+    }
+
+    user.credits -= amount;
+    await user.save();
+
+    return res.json({
+      message: `Successfully redeemed ${amount} Rs. via eSewa.`,
+      user
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
