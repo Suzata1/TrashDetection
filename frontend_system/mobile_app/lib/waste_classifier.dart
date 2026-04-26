@@ -78,7 +78,7 @@ class WasteClassifier {
       );
 
       final input = _preprocessImage(resizedImage);
-      final output = List<double>.filled(6);
+      final output = List<double>.filled(6, 0.0);
 
       _interpreter!.run(input, output);
 
