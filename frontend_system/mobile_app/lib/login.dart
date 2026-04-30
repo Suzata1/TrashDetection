@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'signup.dart';
 import 'dashboard.dart';
+import 'services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,15 +13,10 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-    bool isPasswordHidden = true;
-//
+  bool isPasswordHidden = true;
+  bool isLoading = false;
 
-
-  // Dummy credentials (you can replace with real backend later)
-  final String correctEmail = "test@gmail.com";
-  final String correctPassword = "123456";
-
-  void loginUser() {
+  void loginUser() async {
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
 
@@ -29,17 +25,30 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    if (email == correctEmail && password == correctPassword) {
-      showMessage("Login Successful", Colors.green);
+    setState(() => isLoading = true);
 
-      Future.delayed(Duration(seconds: 1), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => DashboardPage()),
-        );
-      });
-    } else {
-      showMessage("Login Unsuccessful. Wrong email or password", Colors.red);
+    try {
+      final result = await AuthService.login(email, password);
+
+      if (!mounted) return;
+      setState(() => isLoading = false);
+
+      if (result['success'] == true) {
+        showMessage("Login Successful", Colors.green);
+
+        Future.delayed(const Duration(milliseconds: 500), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DashboardPage()),
+          );
+        });
+      } else {
+        showMessage(result['message'] ?? "Login failed", Colors.red);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => isLoading = false);
+      showMessage("Network error. Check your connection.", Colors.red);
     }
   }
 
@@ -121,17 +130,26 @@ class _LoginPageState extends State<LoginPage> {
                   width: 150,
                   height: 40,
                   child: ElevatedButton(
-                    onPressed: loginUser,
+                    onPressed: isLoading ? null : loginUser,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(fontSize: 16, color: Colors.white),
-                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            "Login",
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
                   ),
                 ),
               ),
@@ -166,7 +184,7 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => SignupPage()),
+                              builder: (context) => const SignupPage()),
                         );
                       },
                       child: const Text(

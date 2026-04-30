@@ -33,6 +33,9 @@ export const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
+        credits: user.credits,
+        profilePicture: user.profilePicture,
         role: user.role,
       },
     });
@@ -44,7 +47,7 @@ export const login = async (req, res) => {
 // ================= REGISTER =================
 export const register = async (req, res) => {
   try {
-    const { name, email, phone, password } = req.body;
+    const { name, email, phone, password, role } = req.body;
 
     const exists = await userModel.findOne({ email });
 
@@ -57,8 +60,9 @@ export const register = async (req, res) => {
     const user = await userModel.create({
       name,
       email,
-      phone,
+      phone: phone || "",
       password: hash,
+      role: role === "admin" ? "admin" : "user",
     });
 
     return res.status(201).json({
@@ -126,6 +130,41 @@ export const resetPassword = async (req, res) => {
     await user.save();
 
     return res.json({ message: "Password reset successful" });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+// ================= CHANGE PASSWORD (logged-in user) =================
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "New password must be at least 6 characters" });
+    }
+
+    const user = await userModel.findById(userId).select("+password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    return res.json({ message: "Password changed successfully" });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/login.dart';
-import 'dashboard.dart';
+import 'services/auth_service.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -10,14 +10,15 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
-
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
-   
-bool isPasswordHidden = true;
-bool isConfirmPasswordHidden = true;
+
+  bool isPasswordHidden = true;
+  bool isConfirmPasswordHidden = true;
+  bool isLoading = false;
 
   void showMessage(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -25,14 +26,19 @@ bool isConfirmPasswordHidden = true;
     );
   }
 
-  void registerUser() {
+  void registerUser() async {
     String username = usernameController.text.trim();
     String email = emailController.text.trim();
+    String phone = phoneController.text.trim();
     String password = passwordController.text.trim();
     String confirmPassword = confirmPasswordController.text.trim();
 
-    //  Validation
-    if (username.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    // Validation
+    if (username.isEmpty ||
+        email.isEmpty ||
+        phone.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
       showMessage("Please fill all fields", Colors.red);
       return;
     }
@@ -47,15 +53,31 @@ bool isConfirmPasswordHidden = true;
       return;
     }
 
-    // Success
-    showMessage("Signup Successful 🎉", Colors.green);
+    setState(() => isLoading = true);
 
-    Future.delayed(const Duration(seconds: 1), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => DashboardPage()),
-      );
-    });
+    try {
+      final result = await AuthService.register(username, email, phone, password);
+
+      if (!mounted) return;
+      setState(() => isLoading = false);
+
+      if (result['success'] == true) {
+        showMessage("Signup Successful 🎉 Please login.", Colors.green);
+
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
+        });
+      } else {
+        showMessage(result['message'] ?? "Registration failed", Colors.red);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => isLoading = false);
+      showMessage("Network error. Check your connection.", Colors.red);
+    }
   }
 
   @override
@@ -69,7 +91,6 @@ bool isConfirmPasswordHidden = true;
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 const SizedBox(height: 40),
 
                 const Text(
@@ -83,7 +104,7 @@ bool isConfirmPasswordHidden = true;
                 TextField(
                   controller: usernameController,
                   decoration: InputDecoration(
-                    hintText: "Username",
+                    hintText: "Full Name",
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 15),
@@ -98,8 +119,26 @@ bool isConfirmPasswordHidden = true;
                 // Email
                 TextField(
                   controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     hintText: "Email",
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+
+                // Phone
+                TextField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    hintText: "Phone Number",
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 15),
@@ -153,7 +192,9 @@ bool isConfirmPasswordHidden = true;
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        isConfirmPasswordHidden ? Icons.visibility_off : Icons.visibility,
+                        isConfirmPasswordHidden
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                         color: Colors.grey,
                       ),
                       onPressed: () {
@@ -166,7 +207,6 @@ bool isConfirmPasswordHidden = true;
                 ),
 
                 const SizedBox(height: 30),
-             
 
                 // Sign Up Button
                 Center(
@@ -174,36 +214,46 @@ bool isConfirmPasswordHidden = true;
                     width: 150,
                     height: 40,
                     child: ElevatedButton(
-                      onPressed: registerUser,
+                      onPressed: isLoading ? null : registerUser,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
-                      child: const Text(
-                        "Sign Up",
-                        style: TextStyle(fontSize: 16, color: Colors.white),
-                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              "Sign Up",
+                              style: TextStyle(fontSize: 16, color: Colors.white),
+                            ),
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 20),
-                     // Google Login
-              Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.network(
-                      "https://cdn-icons-png.flaticon.com/512/281/281764.png",
-                      height: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text("Login with Google"),
-                  ],
+
+                // Google Login
+                Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.network(
+                        "https://cdn-icons-png.flaticon.com/512/281/281764.png",
+                        height: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text("Login with Google"),
+                    ],
+                  ),
                 ),
-              ),
 
                 // Login redirect
                 Center(
@@ -215,7 +265,8 @@ bool isConfirmPasswordHidden = true;
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => LoginPage()),
+                            MaterialPageRoute(
+                                builder: (context) => const LoginPage()),
                           );
                         },
                         child: const Text(

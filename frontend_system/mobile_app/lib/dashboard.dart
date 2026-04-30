@@ -1,17 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/leaderBoard.dart';
-import 'package:mobile_app/setting.dart%20';
+import 'package:mobile_app/setting.dart ';
 import 'login.dart';
 import 'qr_scanner.dart';
 import 'user_profile.dart';
 import 'reward.dart';
 import 'itemPage.dart';
 import 'historyPage.dart';
+import 'services/auth_service.dart';
+import 'services/user_service.dart';
+import 'services/waste_service.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
   static const green = Colors.green;
+
+  String userName = "User";
+  int credits = 0;
+  int totalScans = 0;
+  int totalCo2 = 0;
+  List<dynamic> recentHistory = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      // Fetch user profile
+      final userResult = await UserService.getMe();
+      // Fetch scan stats
+      final statsResult = await WasteService.getStats();
+      // Fetch recent history
+      final historyResult = await WasteService.getHistory();
+
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+        if (userResult['success'] == true) {
+          userName = userResult['user']['name'] ?? 'User';
+          credits = userResult['user']['credits'] ?? 0;
+        }
+        if (statsResult['success'] == true) {
+          totalScans = statsResult['stats']['totalScans'] ?? 0;
+          totalCo2 = statsResult['stats']['totalCo2Saved'] ?? 0;
+        }
+        if (historyResult['success'] == true) {
+          final allScans = historyResult['scans'] as List<dynamic>? ?? [];
+          recentHistory = allScans.take(2).toList();
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,51 +72,68 @@ class DashboardPage extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       bottomNavigationBar: _bottomNav(context),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _topBar(context),
-              const SizedBox(height: 20),
-              _greeting(),
-              const SizedBox(height: 20),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator(color: Colors.green))
+            : RefreshIndicator(
+                onRefresh: _loadUserData,
+                color: Colors.green,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _topBar(context),
+                      const SizedBox(height: 20),
+                      _greeting(),
+                      const SizedBox(height: 20),
 
-              const Text(
-                "Your Activity",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      const Text(
+                        "Your Activity",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+
+                      Row(
+                        children: [
+                          Expanded(child: _earnCard(context)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _recycleCard(context)),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      const Text("History",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 10),
+
+                      if (recentHistory.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Center(
+                            child: Text(
+                              "No history yet.",
+                              style: TextStyle(color: Colors.black54),
+                            ),
+                          ),
+                        )
+                      else
+                        ...recentHistory.map((item) => _historyItem(context, item)),
+
+                      const SizedBox(height: 20),
+
+                      const Text("Nearest Vending Machine",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 10),
+
+                      _locationItem("Butwal"),
+                      _locationItem("Bhairahawa"),
+                      _locationItem("Chitwan"),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 10),
-
-              Row(
-                children: [
-                  Expanded(child: _earnCard(context)),
-                  const SizedBox(width: 12),
-                  Expanded(child: _recycleCard(context)),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              const Text("History",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-
-              _historyItem(context),
-              _historyItem(context),
-
-              const SizedBox(height: 20),
-
-              const Text("Nearest Vending Machine",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-
-              _locationItem("Butwal"),
-              _locationItem("Bhairahawa"),
-              _locationItem("Chitwan"),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -75,43 +145,43 @@ class DashboardPage extends StatelessWidget {
       children: [
         IconButton(
           icon: const Icon(Icons.arrow_back, color: green),
-          onPressed: () {
+          onPressed: () async {
+            await AuthService.logout();
+            if (!context.mounted) return;
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => LoginPage()),
+              MaterialPageRoute(builder: (_) => const LoginPage()),
             );
           },
         ),
         IconButton(
-          icon:const Icon(Icons.settings, color: green),
+          icon: const Icon(Icons.settings, color: green),
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => SettingsPage()),
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
             );
-            // Handle notifications
           },
-         ),
-        
+        ),
       ],
     );
   }
 
   // ---------------- GREETING ----------------
   Widget _greeting() {
-    return const Text.rich(
+    return Text.rich(
       TextSpan(
-        style: TextStyle(fontSize: 18, color: Colors.black),
+        style: const TextStyle(fontSize: 18, color: Colors.black),
         children: [
-          TextSpan(text: "Hi, "),
+          const TextSpan(text: "Hi, "),
           TextSpan(
-            text: "Sujata Pokhrel!\n",
-            style: TextStyle(
+            text: "$userName!\n",
+            style: const TextStyle(
               color: Colors.green,
               fontWeight: FontWeight.bold,
             ),
           ),
-          TextSpan(text: "Let’s contribute to our earth."),
+          const TextSpan(text: "Let's contribute to our earth."),
         ],
       ),
     );
@@ -127,8 +197,8 @@ class DashboardPage extends StatelessWidget {
           const Text("Total Earned",
               style: TextStyle(color: Colors.white70)),
           const SizedBox(height: 4),
-          const Text("Rs. 12",
-              style: TextStyle(
+          Text("Rs. $credits",
+              style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 18)),
@@ -139,7 +209,7 @@ class DashboardPage extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => LeaderboardPage()),
+                MaterialPageRoute(builder: (_) => const LeaderboardPage()),
               );
             },
           ),
@@ -171,7 +241,7 @@ class DashboardPage extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => ItemListPage()),
+                MaterialPageRoute(builder: (_) => const ItemListPage()),
               );
             },
           ),
@@ -181,7 +251,13 @@ class DashboardPage extends StatelessWidget {
   }
 
   // ---------------- HISTORY ----------------
-  Widget _historyItem(BuildContext context) {
+  Widget _historyItem(BuildContext context, dynamic item) {
+    String dateStr = item['createdAt'] ?? '';
+    try {
+      final date = DateTime.parse(dateStr).toLocal();
+      dateStr = '${date.toString().split(' ')[0]}';
+    } catch (_) {}
+
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -191,15 +267,15 @@ class DashboardPage extends StatelessWidget {
       },
       child: _card(
         child: Row(
-          children: const [
-            Icon(Icons.monetization_on, color: Colors.green),
-            SizedBox(width: 10),
+          children: [
+            const Icon(Icons.monetization_on, color: Colors.green),
+            const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Earned 4 Rupees"),
-                Text("Feb 11, 2025",
-                    style: TextStyle(color: Colors.grey, fontSize: 12)),
+                Text("Earned ${item['creditsEarned']} Rupees"),
+                Text(dateStr,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12)),
               ],
             ),
           ],
@@ -295,15 +371,15 @@ class DashboardPage extends StatelessWidget {
         switch (index) {
           case 1:
             Navigator.push(context,
-                MaterialPageRoute(builder: (_) => QRScannerPage()));
+                MaterialPageRoute(builder: (_) => const QRScannerPage()));
             break;
           case 2:
             Navigator.push(context,
-                MaterialPageRoute(builder: (_) => UserProfilePage()));
+                MaterialPageRoute(builder: (_) => const UserProfilePage()));
             break;
           case 3:
             Navigator.push(context,
-                MaterialPageRoute(builder: (_) => RewardPage()));
+                MaterialPageRoute(builder: (_) => const RewardPage()));
             break;
         }
       },

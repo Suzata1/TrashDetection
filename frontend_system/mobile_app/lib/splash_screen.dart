@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'routes.dart';
-
+import 'services/auth_service.dart';
+import 'home_page.dart';
+import 'dashboard.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -20,16 +22,32 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
     );
 
     _animation = Tween<double>(begin: 0.5, end: 1.2).animate(_controller);
 
     _controller.forward();
 
-    // Navigate to home after 3 seconds
-    Timer(Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    // Check login status after splash animation
+    Timer(const Duration(seconds: 3), () async {
+      final isLoggedIn = await AuthService.isLoggedIn();
+
+      if (!mounted) return;
+
+      if (isLoggedIn) {
+        // User has a saved token — go straight to dashboard
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DashboardPage()),
+        );
+      } else {
+        // No token — show the welcome / login screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      }
     });
   }
 
@@ -48,7 +66,7 @@ class _SplashScreenState extends State<SplashScreen>
           child: ScaleTransition(
             scale: _animation,
             child: Image.asset(
-              '.../assets/logo.png', // your logo
+              'assets/logo.png',
               width: 150,
             ),
           ),
@@ -57,6 +75,3 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
-
-
-

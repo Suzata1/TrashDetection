@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dashboard.dart';
+import 'services/waste_service.dart';
 
 class QrAfterPage extends StatefulWidget {
   final String wasteType;
@@ -21,6 +22,13 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
   late Animation<Offset> _slideAnimation;
   bool _isVisible = false;
 
+  // Backend result
+  bool _isSubmitting = true;
+  bool _submitSuccess = false;
+  int _creditsEarned = 0;
+  int _totalCredits = 0;
+  String _errorMessage = '';
+
   @override
   void initState() {
     super.initState();
@@ -33,12 +41,54 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
     _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
-    Future.delayed(const Duration(milliseconds: 200), () {
-      if (mounted) {
-        setState(() => _isVisible = true);
-        _controller.forward();
-      }
-    });
+    // Submit the scan to the backend
+    _submitScan();
+  }
+
+  Future<void> _submitScan() async {
+    try {
+      final result = await WasteService.reportScan(
+        widget.wasteType,
+        widget.confidence,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _isSubmitting = false;
+        if (result['success'] == true) {
+          _submitSuccess = true;
+          _creditsEarned = result['creditsEarned'] ?? 0;
+          _totalCredits = result['updatedCredits'] ?? 0;
+        } else {
+          _submitSuccess = false;
+          _errorMessage = result['message'] ?? 'Failed to submit scan';
+        }
+      });
+
+      // Start animations after successful submission
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (mounted) {
+          setState(() => _isVisible = true);
+          _controller.forward();
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _submitSuccess = false;
+        _errorMessage = 'Network error. Credits will be synced later.';
+      });
+
+      // Still show the UI even on error
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (mounted) {
+          setState(() => _isVisible = true);
+          _controller.forward();
+        }
+      });
+    }
   }
 
   @override
@@ -89,6 +139,23 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     final confidencePercent = (widget.confidence * 100).toStringAsFixed(1);
 
+    if (_isSubmitting) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              CircularProgressIndicator(color: Colors.green),
+              SizedBox(height: 20),
+              Text("Submitting your scan...",
+                  style: TextStyle(fontSize: 16, color: Colors.black54)),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -111,14 +178,46 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
 
           ScaleTransition(
             scale: _scaleAnimation,
-            child: const Icon(Icons.check_circle_outline, color: Colors.green, size: 80),
+            child: Icon(
+              _submitSuccess ? Icons.check_circle_outline : Icons.error_outline,
+              color: _submitSuccess ? Colors.green : Colors.orange,
+              size: 80,
+            ),
           ),
 
           const SizedBox(height: 20),
-          const Text(
-            'Waste Identified!',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            _submitSuccess ? 'Waste Identified!' : 'Scan Recorded Locally',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
+
+          if (_submitSuccess) ...[
+            const SizedBox(height: 8),
+            Text(
+              'You earned Rs. $_creditsEarned!',
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'Total balance: Rs. $_totalCredits',
+              style: const TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+          ],
+
+          if (!_submitSuccess && _errorMessage.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: Text(
+                _errorMessage,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, color: Colors.orange),
+              ),
+            ),
+          ],
 
           const SizedBox(height: 40),
 
@@ -223,16 +322,18 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
               style: TextStyle(color: Colors.white),
             ),
           ),
-          const SizedBox(height: 94),
+          const Spacer(),
 
           AnimatedContainer(
             duration: const Duration(milliseconds: 800),
             height: _isVisible ? 60 : 0,
             width: double.infinity,
-            color: Colors.green.shade700,
+            color: _submitSuccess ? Colors.green.shade700 : Colors.orange.shade700,
             alignment: Alignment.center,
             child: Text(
-              "${_getMaterialName(widget.wasteType)} recycled successfully",
+              _submitSuccess
+                  ? "${_getMaterialName(widget.wasteType)} recycled successfully"
+                  : "Scan saved — credits pending",
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),

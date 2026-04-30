@@ -2,6 +2,21 @@
 import userModel from "../models/user.model.js";
 
 
+// ================= GET CURRENT USER (from JWT) =================
+export const getMe = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.json({ user });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 // ================= GET ALL USERS =================
 export const getAllUsers = async (req, res) => {
   try {
@@ -130,3 +145,21 @@ export const redeemCredits = async (req, res) => {
 //     return res.status(500).json({ message: err.message });
 //   }
 // };
+
+// ================= LEADERBOARD =================
+export const getLeaderboard = async (req, res) => {
+  try {
+    const users = await userModel
+      .find({ role: "user" })
+      .sort({ credits: -1 })
+      .limit(10)
+      .select("name credits profilePicture");
+
+    return res.json({
+      message: "Leaderboard fetched",
+      leaderboard: users,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};

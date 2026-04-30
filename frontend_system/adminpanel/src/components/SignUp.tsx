@@ -33,7 +33,7 @@ const SignupPage: React.FC = () => {
 
     setLoading(true);
     try {
-      await API.post("/auth/register", { name, email, password });
+      await API.post("/auth/register", { name, email, password, role: "admin" });
       toast.success("Account created! Please sign in.");
       navigate("/dashboard");
     } catch (err: unknown) {
