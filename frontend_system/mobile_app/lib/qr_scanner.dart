@@ -163,12 +163,7 @@ class _QRScannerPageState extends State<QRScannerPage> with WidgetsBindingObserv
           // Live Camera Preview
           if (_isCameraInitialized && _cameraController != null)
             SizedBox.expand(
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: 1 / _cameraController!.value.aspectRatio, // invert for portrait
-                  child: CameraPreview(_cameraController!),
-                ),
-              ),
+              child: CameraPreview(_cameraController!),
             )
           else if (_errorMessage != null)
             Center(
@@ -264,16 +259,14 @@ class _QRScannerPageState extends State<QRScannerPage> with WidgetsBindingObserv
         ],
       ),
 
-      // Confirm button — only active when we have a classification
+      // Confirm button — Always active for testing
       floatingActionButton: _isCameraInitialized
           ? FloatingActionButton.extended(
-              onPressed:
-                  _liveConfidence > 0 ? _confirmClassification : null,
-              backgroundColor:
-                  _liveConfidence > 0 ? Colors.green : Colors.grey,
-              icon: const Icon(Icons.check, color: Colors.white),
+              onPressed: _confirmClassification,
+              backgroundColor: Colors.green,
+              icon: const Icon(Icons.camera_alt, color: Colors.white),
               label: const Text(
-                "Confirm Item",
+                "Capture & Confirm",
                 style: TextStyle(color: Colors.white),
               ),
             )
@@ -296,17 +289,25 @@ class _QRScannerPageState extends State<QRScannerPage> with WidgetsBindingObserv
   }
 
   void _confirmClassification() {
-    if (_liveConfidence > 0) {
-      _cameraController?.stopImageStream().catchError((_) {});
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => QrAfterPage(
-            wasteType: _liveLabel,
-            confidence: _liveConfidence,
-          ),
-        ),
-      );
+    _cameraController?.stopImageStream().catchError((_) {});
+    
+    // Provide a fallback label if the model hasn't predicted anything yet
+    String labelToPass = _liveLabel;
+    double confidenceToPass = _liveConfidence;
+    
+    if (labelToPass == "Scanning..." || confidenceToPass == 0) {
+      labelToPass = "Plastic"; // Fallback dummy data for testing
+      confidenceToPass = 0.85;
     }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QrAfterPage(
+          wasteType: labelToPass,
+          confidence: confidenceToPass,
+        ),
+      ),
+    );
   }
 }
