@@ -52,7 +52,7 @@ const DashboardPage: React.FC = () => {
         {
           label: "Total Recycled Wastes",
           value: stats.totalRecycledWastes,
-          suffix: " kg",
+          suffix: "",
           icon: FiTrash2,
           color: "#10b981",
           bg: "rgba(16, 185, 129, 0.1)",
@@ -60,7 +60,7 @@ const DashboardPage: React.FC = () => {
         {
           label: "Total Carbon Emission Saved",
           value: stats.totalCarbonEmission,
-          suffix: " kg CO2",
+          suffix: " ",
           icon: FiCloudLightning,
           color: "#059669",
           bg: "rgba(5, 150, 105, 0.1)",

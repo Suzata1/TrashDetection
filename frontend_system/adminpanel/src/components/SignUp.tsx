@@ -35,7 +35,7 @@ const SignupPage: React.FC = () => {
     try {
       await API.post("/auth/register", { name, email, password });
       toast.success("Account created! Please sign in.");
-      navigate("/");
+      navigate("/dashboard");
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(error.response?.data?.message || "Registration failed");

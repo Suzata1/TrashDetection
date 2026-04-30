@@ -1,4 +1,6 @@
+
 import userModel from "../models/user.model.js";
+
 
 // ================= GET ALL USERS =================
 export const getAllUsers = async (req, res) => {
@@ -89,3 +91,42 @@ export const redeemCredits = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+// // ================= Rest password =================
+
+
+
+// export const resetPasswordWithOtp = async (req, res) => {
+//   try {
+//     const { email, otp, password } = req.body;
+
+//     const user = await userModel.findOne({ email });
+
+//     if (!user) {
+//       return res.status(400).json({ message: "User not found" });
+//     }
+
+//     // Convert both to string for safe comparison
+//     if (
+//       String(user.otp) !== String(otp) ||
+//       user.otpExpires < Date.now()
+//     ) {
+//       return res.status(400).json({ message: "Invalid or expired OTP" });
+//     }
+
+//     // Hash new password
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     user.password = hashedPassword;
+//     user.otp = undefined;
+//     user.otpExpires = undefined;
+
+//     await user.save();
+
+//     return res.json({
+//       message: "Password reset successful",
+//     });
+//   } catch (err) {
+//     return res.status(500).json({ message: err.message });
+//   }
+// };

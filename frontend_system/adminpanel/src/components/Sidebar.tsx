@@ -184,7 +184,7 @@ const Sidebar: React.FC = () => {
         style={{
           position: "absolute",
           top: "20px",
-          right: "-5px",
+          right: "5px",
           width: "28px",
           height: "28px",
           borderRadius: "50%",
