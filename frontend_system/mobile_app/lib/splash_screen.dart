@@ -65,9 +65,24 @@ class _SplashScreenState extends State<SplashScreen>
           opacity: _controller,
           child: ScaleTransition(
             scale: _animation,
-            child: Image.asset(
-              'assets/logo.png',
+            child: Container(
               width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Center(
+                child: Text(
+                  "Trash\nDetection",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
           ),
         ),

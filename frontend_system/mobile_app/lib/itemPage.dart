@@ -109,15 +109,10 @@ class _ItemListPageState extends State<ItemListPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // The Image.asset call must exactly match pubspec.yaml
-          Image.asset(
-            imagePath,
-            height: 60,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              // Fallback icon if the image still fails to load
-              return const Icon(Icons.broken_image, color: Colors.white, size: 60);
-            },
+          Icon(
+            _getIconForTitle(title),
+            color: Colors.white,
+            size: 60,
           ),
           const SizedBox(height: 12),
           Text(
@@ -132,5 +127,18 @@ class _ItemListPageState extends State<ItemListPage> {
         ],
       ),
     );
+  }
+
+  IconData _getIconForTitle(String title) {
+    if (title.contains("Aluminum") || title.contains("Cans")) {
+      return Icons.local_drink;
+    } else if (title.contains("Plastic") || title.contains("Bottle")) {
+      return Icons.water_drop;
+    } else if (title.contains("Glass")) {
+      return Icons.wine_bar;
+    } else if (title.contains("Paper")) {
+      return Icons.article;
+    }
+    return Icons.delete;
   }
 }
