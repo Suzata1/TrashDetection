@@ -5,7 +5,7 @@
 /// For Android Emulator, use 10.0.2.2 instead.
 class ApiConfig {
   // ─── Change this to your machine's IP ───
-  static const String _host = '192.168.3.73';
+  static const String _host = '192.168.3.154';
   static const int _port = 4000;
 
   static const String baseUrl = 'http://$_host:$_port/api';
@@ -25,4 +25,7 @@ class ApiConfig {
   static const String scanWaste = '$baseUrl/waste/scan';
   static const String scanHistory = '$baseUrl/waste/history';
   static const String scanStats = '$baseUrl/waste/stats';
+
+  // Location endpoints
+  static const String locations = '$baseUrl/locations';
 }

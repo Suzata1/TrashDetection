@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dashboard.dart';
 import 'services/waste_service.dart';
+import 'services/auth_service.dart';
 
 class QrAfterPage extends StatefulWidget {
   final String wasteType;
@@ -60,6 +61,9 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
           _submitSuccess = true;
           _creditsEarned = result['creditsEarned'] ?? 0;
           _totalCredits = result['updatedCredits'] ?? 0;
+          
+          // Sync cached user in SharedPreferences
+          AuthService.updateSavedUser({'credits': _totalCredits});
         } else {
           _submitSuccess = false;
           _errorMessage = result['message'] ?? 'Failed to submit scan';

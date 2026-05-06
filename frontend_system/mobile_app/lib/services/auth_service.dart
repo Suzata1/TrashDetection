@@ -84,6 +84,18 @@ class AuthService {
     return jsonDecode(userStr);
   }
 
+  // ─── UPDATE SAVED USER ───
+  static Future<void> updateSavedUser(Map<String, dynamic> updatedData) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userStr = prefs.getString('user');
+    if (userStr != null) {
+      final Map<String, dynamic> user = jsonDecode(userStr);
+      // Merge updated data
+      user.addAll(updatedData);
+      await prefs.setString('user', jsonEncode(user));
+    }
+  }
+
   // ─── CHECK IF LOGGED IN ───
   static Future<bool> isLoggedIn() async {
     final token = await getToken();

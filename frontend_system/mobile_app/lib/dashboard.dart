@@ -7,9 +7,11 @@ import 'user_profile.dart';
 import 'reward.dart';
 import 'itemPage.dart';
 import 'historyPage.dart';
+import 'Nearest.dart';
 import 'services/auth_service.dart';
 import 'services/user_service.dart';
 import 'services/waste_service.dart';
+import 'services/location_service.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -26,6 +28,7 @@ class _DashboardPageState extends State<DashboardPage> {
   int totalScans = 0;
   int totalCo2 = 0;
   List<dynamic> recentHistory = [];
+  List<dynamic> locations = [];
   bool isLoading = true;
 
   @override
@@ -42,6 +45,8 @@ class _DashboardPageState extends State<DashboardPage> {
       final statsResult = await WasteService.getStats();
       // Fetch recent history
       final historyResult = await WasteService.getHistory();
+      // Fetch locations
+      final locationsResult = await LocationService.getLocations();
 
       if (!mounted) return;
 
@@ -58,6 +63,10 @@ class _DashboardPageState extends State<DashboardPage> {
         if (historyResult['success'] == true) {
           final allScans = historyResult['scans'] as List<dynamic>? ?? [];
           recentHistory = allScans.take(2).toList();
+        }
+        if (locationsResult['success'] == true) {
+          final allLocations = locationsResult['locations'] as List<dynamic>? ?? [];
+          locations = allLocations.take(3).toList();
         }
       });
     } catch (e) {
@@ -127,9 +136,36 @@ class _DashboardPageState extends State<DashboardPage> {
                           style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 10),
 
-                      _locationItem("Butwal"),
-                      _locationItem("Bhairahawa"),
-                      _locationItem("Chitwan"),
+                      if (locations.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          child: Text(
+                            "No locations available currently.",
+                            style: TextStyle(color: Colors.black54),
+                          ),
+                        )
+                      else
+                        ...locations.map((loc) => _locationItem(
+                              loc['vendorName'] ?? 'Unknown Vendor',
+                              loc['status'] ?? 'Unknown',
+                            )),
+                            
+                      // See All Locations Button
+                      if (locations.isNotEmpty)
+                        Center(
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const NearestPage()),
+                              );
+                            },
+                            child: const Text(
+                              "View All Locations",
+                              style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -209,7 +245,7 @@ class _DashboardPageState extends State<DashboardPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const LeaderboardPage()),
+                MaterialPageRoute(builder: (_) => const RewardPage()),
               );
             },
           ),
@@ -285,23 +321,31 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // ---------------- LOCATION ----------------
-  Widget _locationItem(String name) {
-    return _card(
-      color: Colors.green,
-      child: Row(
-        children: [
-          const Icon(Icons.location_on, color: Colors.white),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(name,
-                  style: const TextStyle(color: Colors.white)),
-              const Text("Working condition",
-                  style: TextStyle(color: Colors.white70, fontSize: 12)),
-            ],
-          ),
-        ],
+  Widget _locationItem(String name, String status) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const NearestPage()),
+        );
+      },
+      child: _card(
+        color: Colors.green,
+        child: Row(
+          children: [
+            const Icon(Icons.location_on, color: Colors.white),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                Text("Status: $status",
+                    style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
