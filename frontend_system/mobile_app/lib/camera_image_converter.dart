@@ -31,26 +31,33 @@ img.Image _convertYUV420(CameraImage image) {
   final width = image.width;
   final height = image.height;
 
-  final uvRowStride = image.planes[1].bytesPerRow;
-  final uvPixelStride = image.planes[1].bytesPerPixel!;
+  final yPlane = image.planes[0];
+  final uPlane = image.planes[1];
+  final vPlane = image.planes[2];
+
+  final int uvRowStride = uPlane.bytesPerRow;
+  final int uvPixelStride = uPlane.bytesPerPixel!;
 
   final imgImage = img.Image(width: width, height: height);
 
-  for (var w = 0; w < width; w++) {
-    for (var h = 0; h < height; h++) {
-      final uvIndex =
-          uvPixelStride * (w / 2).floor() + uvRowStride * (h / 2).floor();
-      final index = h * image.planes[0].bytesPerRow + w;
+  for (int h = 0; h < height; h++) {
+    for (int w = 0; w < width; w++) {
+      final int yIndex = h * yPlane.bytesPerRow + w;
+      final int uvIndex =
+          uvPixelStride * (w ~/ 2) + uvRowStride * (h ~/ 2);
 
-      final y = image.planes[0].bytes[index];
-      final u = image.planes[1].bytes[uvIndex];
-      final v = image.planes[2].bytes[uvIndex];
+      final int y = yPlane.bytes[yIndex];
+      final int u = uPlane.bytes[uvIndex];
+      final int v = vPlane.bytes[uvIndex];
 
-      imgImage.setPixelRgb(w, h, y, u, v);
+      // Proper YUV420 to RGB conversion
+      int r = (y + 1.370705 * (v - 128)).round().clamp(0, 255);
+      int g = (y - 0.337633 * (u - 128) - 0.698001 * (v - 128)).round().clamp(0, 255);
+      int b = (y + 1.732446 * (u - 128)).round().clamp(0, 255);
+
+      imgImage.setPixelRgb(w, h, r, g, b);
     }
   }
 
-  // The camera image often comes in rotated 90 degrees clockwise on mobile.
-  // We can return the raw image and let the caller handle rotation, or rotate it here.
   return imgImage;
 }
