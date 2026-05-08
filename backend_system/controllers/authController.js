@@ -96,9 +96,50 @@ export const forgotPassword = async (req, res) => {
 
     await user.save();
 
+    // Send reset link via email (never expose token in API response)
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const resetLink = `${frontendUrl}/reset-password/${token}`;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"EcoAdmin" <${process.env.EMAIL}>`,
+      to: email,
+      subject: "Password Reset - EcoAdmin Panel",
+      html: `
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px; background: #f8fafc; border-radius: 12px;">
+          <div style="text-align: center; margin-bottom: 28px;">
+            <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, #10b981, #059669); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+              <span style="font-size: 28px;">🔒</span>
+            </div>
+            <h2 style="color: #0f172a; margin: 0 0 8px;">Password Reset</h2>
+            <p style="color: #64748b; font-size: 14px; margin: 0;">You requested a password reset for your EcoAdmin account.</p>
+          </div>
+          <div style="background: #ffffff; border-radius: 8px; padding: 24px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+            <p style="color: #475569; font-size: 14px; line-height: 1.6; margin: 0 0 20px;">
+              Click the button below to set a new password. This link will expire in <strong>1 hour</strong>.
+            </p>
+            <div style="text-align: center;">
+              <a href="${resetLink}" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                Reset Password
+              </a>
+            </div>
+          </div>
+          <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">
+            If you didn't request this, you can safely ignore this email.
+          </p>
+        </div>
+      `,
+    });
+
     return res.json({
-      message: "Reset link generated",
-      token,
+      message: "Password reset link has been sent to your email",
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });

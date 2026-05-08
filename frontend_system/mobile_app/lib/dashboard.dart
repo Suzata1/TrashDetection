@@ -265,15 +265,15 @@ class _DashboardPageState extends State<DashboardPage> {
               style: TextStyle(color: Colors.green)),
           const SizedBox(height: 4),
           const Text(
-            "View recyclable items",
+            "View recyclable ",
             textAlign: TextAlign.center,
             style: TextStyle(
-                color: Colors.green, fontWeight: FontWeight.bold),
+                color: Colors.green,fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
 
           _buttonGreen(
-            text: "Recycle item",
+            text: "Items",
             onTap: () {
               Navigator.push(
                 context,

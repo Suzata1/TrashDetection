@@ -237,9 +237,9 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
                   decoration: BoxDecoration(
                     color: Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
-                    ],
+                    // boxShadow: [
+                    //   BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
+                    // ],
                   ),
                   child: Column(
                     children: [
@@ -253,7 +253,7 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
                           size: 100,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                       const SizedBox(height: 20),
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -266,7 +266,7 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
                             _getMaterialName(widget.wasteType),
                             style: const TextStyle(
                               color: Colors.green,
-                              fontSize: 18,
+                              // fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -293,7 +293,7 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
                         ],
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
                       const Divider(),
                       const SizedBox(height: 8),
 
@@ -307,12 +307,12 @@ class _QrAfterPageState extends State<QrAfterPage> with SingleTickerProviderStat
               ),
             ),
           ),
-          const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
           TextButton(
             style: TextButton.styleFrom(
               backgroundColor: Colors.green,
-              minimumSize: const Size(140, 50),
+              minimumSize: const Size(120, 30),
             ),
             onPressed: () {
               Navigator.pushAndRemoveUntil(

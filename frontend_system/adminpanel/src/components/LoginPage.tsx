@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import API from "../api";
 import toast from "react-hot-toast";
-import { FiMail, FiLock, FiLogIn, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiMail, FiLock,  FiEye, FiEyeOff } from "react-icons/fi";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -86,21 +86,31 @@ const LoginPage: React.FC = () => {
         }}
       >
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "36px" }}>
+        <div style={{ textAlign: "center", marginBottom: "40px" }}>
           <div
             style={{
-              width: "56px",
-              height: "56px",
-              borderRadius: "var(--radius-md)",
-              background: "var(--gradient-primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 20px",
-              boxShadow: "0 8px 32px rgba(16, 185, 129, 0.3)",
-            }}
-          >
-            <FiLogIn size={26} color="#fff" />
+      width: "60px",
+      height: "60px",
+      borderRadius: "var(--radius-md)",
+      background: "var(--gradient-primary)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      margin: "0 auto 20px",
+      boxShadow: "0 8px 32px rgba(16, 185, 129, 0.3)",
+      overflow: "hidden",
+    }}
+  >
+    <img
+      src="src/assets/logo1.png"
+      alt="Logo"
+      style={{
+        width: "60px",
+        height: "60px",
+        objectFit: "contain",
+      }}
+    />
+            {/* <FiLogIn size={26} color="#fff" /> */}
           </div>
           <h1 style={{ fontSize: "26px", fontWeight: 700, marginBottom: "8px" }}>
             Welcome Back

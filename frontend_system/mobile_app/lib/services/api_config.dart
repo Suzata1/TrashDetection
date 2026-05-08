@@ -5,7 +5,7 @@
 /// For Android Emulator, use 10.0.2.2 instead.
 class ApiConfig {
   // ─── Change this to your machine's IP ───
-  static const String _host = '192.168.3.154';
+  static const String _host = '192.168.3.117';
   static const int _port = 4000;
 
   static const String baseUrl = 'http://$_host:$_port/api';

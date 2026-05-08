@@ -21,7 +21,7 @@ const ForgotPassword: React.FC = () => {
     try {
       await API.post("/auth/forgot-password", { email });
       setSent(true);
-      toast.success("Reset link has been generated!");
+      toast.success("Reset link sent to your email!");
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(error.response?.data?.message || "Request failed");
@@ -186,7 +186,7 @@ const ForgotPassword: React.FC = () => {
             </form>
           </>
         ) : (
-          /* Success State */
+          /* Success State — user must check their email */
           <div
             className="animate-fade-in"
             style={{ textAlign: "center", padding: "20px 0" }}
@@ -216,8 +216,12 @@ const ForgotPassword: React.FC = () => {
                 marginBottom: "28px",
               }}
             >
-              We've sent a password reset link to <br />
+              We've sent a password reset link to<br />
               <strong style={{ color: "var(--color-text-primary)" }}>{email}</strong>
+              <br />
+              <span style={{ fontSize: "13px", marginTop: "8px", display: "inline-block" }}>
+                The link will expire in 1 hour.
+              </span>
             </p>
             <Link
               to="/"

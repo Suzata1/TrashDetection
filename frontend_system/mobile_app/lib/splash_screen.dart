@@ -58,35 +58,32 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: FadeTransition(
-          opacity: _controller,
-          child: ScaleTransition(
-            scale: _animation,
-            child: Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Center(
-                child: Text(
-                  "Trash\nDetection",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: Center(
+      child: FadeTransition(
+        opacity: _controller,
+        child: ScaleTransition(
+          scale: _animation,
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              color: Colors.green,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Center(
+              child: Image.asset(
+                'assets/logo.png',
+                width: 90,
+                height: 90,
+                fit: BoxFit.contain,
               ),
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
