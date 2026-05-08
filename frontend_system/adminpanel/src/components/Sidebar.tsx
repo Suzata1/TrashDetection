@@ -9,7 +9,6 @@ import {
   FiLogOut,
   FiChevronLeft,
   FiChevronRight,
-  FiShield,
 } from "react-icons/fi";
 import { FaHandshake } from "react-icons/fa";
 
@@ -64,14 +63,22 @@ const Sidebar: React.FC = () => {
             width: "36px",
             height: "36px",
             borderRadius: "var(--radius-sm)",
-            background: "var(--gradient-primary)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
+            overflow: "hidden",
           }}
         >
-          <FiShield size={20} color="#fff" />
+          <img
+            src="/logo1.png"
+            alt="EcoAdmin"
+            style={{
+              width: "36px",
+              height: "36px",
+              objectFit: "contain",
+            }}
+          />
         </div>
         {!collapsed && (
           <span
